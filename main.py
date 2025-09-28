@@ -9,8 +9,16 @@ from crawl4ai.async_dispatcher import MemoryAdaptiveDispatcher
 from crawl4ai import CrawlerMonitor, DisplayMode
 from crawl4ai import RateLimiter
 
-# TODO; Make this a CLI argument with argparse
-base_url = "https://cleitonleonel.github.io/pyquotex/en/"
+from argparse import ArgumentParser
+
+
+def parse_args():
+    parser = ArgumentParser(description="Crawl a website and save results.")
+    parser.add_argument('--base-url', required=True, help='Base URL to crawl')
+    args = parser.parse_args()
+    print(f"[DEBUG] Parsed base_url: {args.base_url}")  # Test parsing
+    return args
+
 
 async def main(url):
     browser_config = BrowserConfig(
@@ -66,4 +74,5 @@ async def main(url):
            save_all(single_result, base_dir, url_id)
 
 if __name__ == "__main__":
-    asyncio.run(main(base_url))
+    args = parse_args()
+    asyncio.run(main(args.base_url))
