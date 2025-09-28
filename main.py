@@ -1,20 +1,41 @@
 import asyncio
 import os
-from crawl_results.save_utils import save_all
+from save_utils import save_all
 from crawl4ai import AsyncWebCrawler
-from crawl4ai.async_configs import BrowserConfig, CrawlerRunConfig, CacheMode
-
-
+from crawl4ai.deep_crawling import BFSDeepCrawlStrategy
+from crawl4ai.content_scraping_strategy import LXMLWebScrapingStrategy
+from crawl4ai.async_configs import BrowserConfig, CrawlerRunConfig, CacheMode 
+from crawl4ai.async_dispatcher import MemoryAdaptiveDispatcher
+from crawl4ai import CrawlerMonitor, DisplayMode
+from crawl4ai import RateLimiter
 
 # TODO; Make this a CLI argument with argparse
-url = "https://cleitonleonel.github.io/pyquotex/en/"
+base_url = "https://cleitonleonel.github.io/pyquotex/en/"
 
 async def main(url):
     browser_config = BrowserConfig(
         browser_type="chromium",
         verbose=True,
         )
+    
+    dispatcher = MemoryAdaptiveDispatcher(
+        memory_threshold_percent=70.0,
+        check_interval=1.0,
+        max_session_permit=10,
+        monitor=CrawlerMonitor(
+            # display_mode=DisplayMode.DETAILED
+        )
+    )
+    
     run_config = CrawlerRunConfig(
+        # Deep crawling
+        deep_crawl_strategy=BFSDeepCrawlStrategy(
+            max_depth=2,
+            include_external=False,
+        ),
+        
+        scraping_strategy=LXMLWebScrapingStrategy(),
+
         # Content filtering
         word_count_threshold=10,
         excluded_tags=['form', 'header'],
@@ -30,40 +51,19 @@ async def main(url):
         screenshot=True,
     )
 
+    from uuid import uuid4
+
     async with AsyncWebCrawler(config=browser_config) as crawler:
-        result = await crawler.arun(
+        for result in await crawler.arun(
             url=url,
-            config=run_config
-        )
-
-        import hashlib
-        url_id = hashlib.md5(url.encode()).hexdigest()
-        base_dir = os.path.join(os.path.dirname(__file__), "crawl_results")
-
-        # Defensive checks for CrawlResult fields
-        if hasattr(result, "success") and result.success:
-            save_all(result, base_dir, url_id)
-            print(f"Saved crawl results for {url} to {base_dir}")
-
-            # Print clean content
-            if result.markdown:
-                if hasattr(result.markdown, "raw_markdown"):
-                    print("Content:", result.markdown.raw_markdown[:500])
-                else:
-                    print("Content:", str(result.markdown)[:500])
-
-            # Process images
-            if result.media and "images" in result.media:
-                for image in result.media["images"]:
-                    print(f"Found image: {image.get('src')}")
-
-            # Process links
-            if result.links and "internal" in result.links:
-                for link in result.links["internal"]:
-                    print(f"Internal link: {link.get('href')}")
-        else:
-            error_msg = getattr(result, "error_message", "Unknown error")
-            print(f"Crawl failed: {error_msg}")
+            config=run_config,
+            dispatcher=dispatcher,
+        ):
+           # CrawlResult
+           single_result = result._results[0] if len(result._results) == 1 else "None or Multiple Results"
+           base_dir = os.path.join(os.path.dirname(__file__), "crawl_results")
+           url_id = uuid4()        
+           save_all(single_result, base_dir, url_id)
 
 if __name__ == "__main__":
-    asyncio.run(main(url))
+    asyncio.run(main(base_url))
