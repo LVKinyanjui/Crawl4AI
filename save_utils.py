@@ -3,6 +3,7 @@ Utility functions to save CrawlResult fields to the organized directory structur
 """
 import os
 import json
+import re
 from typing import Any
 
 def debug_print(attr_name, value):
@@ -139,3 +140,17 @@ def save_all(result, base_dir, url_id):
     save_mhtml(result, base_dir, url_id)
     save_screenshot(result, base_dir, url_id)
     save_metadata(result, base_dir, url_id)
+
+def url_to_filename(url: str) -> str:
+    """Convert a URL to a safe filename: example_com_login"""
+    # Remove protocol
+    url = re.sub(r'^https?://', '', url)
+    # Remove query params and fragments
+    url = re.sub(r'[?#].*$', '', url)
+    # Replace non-alphanum (except / and .) with nothing
+    url = re.sub(r'[^\w./-]', '', url)
+    # Replace dots and slashes with underscores
+    url = url.replace('.', '_').replace('/', '_')
+    # Remove leading/trailing underscores
+    url = url.strip('_')
+    return url

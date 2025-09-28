@@ -1,6 +1,6 @@
 import asyncio
 import os
-from save_utils import save_all
+from save_utils import save_all, url_to_filename
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.deep_crawling import BFSDeepCrawlStrategy
 from crawl4ai.content_scraping_strategy import LXMLWebScrapingStrategy
@@ -10,7 +10,6 @@ from crawl4ai import CrawlerMonitor, DisplayMode
 from crawl4ai import RateLimiter
 
 from argparse import ArgumentParser
-
 
 def parse_args():
     parser = ArgumentParser(description="Crawl a website and save results.")
@@ -70,8 +69,14 @@ async def main(url):
            # CrawlResult
            single_result = result._results[0] if len(result._results) == 1 else "None or Multiple Results"
            base_dir = os.path.join(os.path.dirname(__file__), "crawl_results")
-           url_id = uuid4()        
-           save_all(single_result, base_dir, url_id)
+           
+           file_name = str()
+           if single_result.url:
+              file_name = url_to_filename(single_result.url)
+           else:
+              file_name = str(uuid4())
+
+           save_all(single_result, base_dir, file_name)
 
 if __name__ == "__main__":
     args = parse_args()
