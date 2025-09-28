@@ -14,16 +14,28 @@ from argparse import ArgumentParser
 def parse_args():
     parser = ArgumentParser(description="Crawl a website and save results.")
     parser.add_argument('--base-url', required=True, help='Base URL to crawl')
+    parser.add_argument('--managed', action='store_true', help='Use managed browser service')
+    parser.add_argument('--user-data-dir', type=str, help='Path to user data directory for the browser profile')
     args = parser.parse_args()
-    print(f"[DEBUG] Parsed base_url: {args.base_url}")  # Test parsing
+    if args.user_data_dir and not args.managed:
+        print("[WARNING] --user-data-dir is only used with --managed. It will be ignored.")
+    print(f"[DEBUG] Parsed args: {args}")
     return args
 
-
-async def main(url):
-    browser_config = BrowserConfig(
-        browser_type="chromium",
-        verbose=True,
+async def main(args):
+    if args.managed:
+        user_data_dir = args.user_data_dir or "/home/jovian/.cache/ms-playwright/profiles/chrome_profile"
+        browser_config = BrowserConfig(
+            headless=True,
+            use_managed_browser=True,
+            user_data_dir=user_data_dir,
+            browser_type="chromium"
         )
+    else:
+        browser_config = BrowserConfig(
+            browser_type="chromium",
+            verbose=True,
+            )
     
     dispatcher = MemoryAdaptiveDispatcher(
         memory_threshold_percent=70.0,
@@ -62,7 +74,7 @@ async def main(url):
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
         for result in await crawler.arun(
-            url=url,
+            url=args.base_url,
             config=run_config,
             dispatcher=dispatcher,
         ):
@@ -80,4 +92,4 @@ async def main(url):
 
 if __name__ == "__main__":
     args = parse_args()
-    asyncio.run(main(args.base_url))
+    asyncio.run(main(args))
