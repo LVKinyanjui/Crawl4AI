@@ -13,10 +13,19 @@ from argparse import ArgumentParser
 
 def parse_args():
     parser = ArgumentParser(description="Crawl a website and save results.")
-    parser.add_argument('--base-url', required=True, help='Base URL to crawl')
+    # Allow base URL to be supplied either positionally or via --base-url
+    parser.add_argument('base_url', nargs='?', help='Base URL to crawl (positional)')
+    parser.add_argument('--base-url', dest='base_url', help='Base URL to crawl (optional flag)')
+    parser.add_argument('--max-depth', type=int, default=2, help='Maximum crawl depth')
+
     parser.add_argument('--managed', action='store_true', help='Use managed browser service')
     parser.add_argument('--user-data-dir', type=str, help='Path to user data directory for the browser profile')
     args = parser.parse_args()
+
+    # Enforce that base_url is provided either positionally or with the flag
+    if not args.base_url:
+        parser.error("the following arguments are required: base_url (positional or --base-url)")
+
     if args.user_data_dir and not args.managed:
         print("[WARNING] --user-data-dir is only used with --managed. It will be ignored.")
     print(f"[DEBUG] Parsed args: {args}")
@@ -38,9 +47,9 @@ async def main(args):
             )
     
     dispatcher = MemoryAdaptiveDispatcher(
-        memory_threshold_percent=70.0,
+        memory_threshold_percent=50.0,
         check_interval=1.0,
-        max_session_permit=10,
+        max_session_permit=5,
         monitor=CrawlerMonitor(
             # display_mode=DisplayMode.DETAILED
         )
@@ -49,7 +58,7 @@ async def main(args):
     run_config = CrawlerRunConfig(
         # Deep crawling
         deep_crawl_strategy=BFSDeepCrawlStrategy(
-            max_depth=2,
+            max_depth=args.max_depth,
             include_external=False,
         ),
         
