@@ -88,6 +88,7 @@ async def main(args):
         scraping_strategy=LXMLWebScrapingStrategy(),
 
         # Content filtering
+        # TODO: Investigatte what this is
         word_count_threshold=10,
         excluded_tags=['form', 'header'],
         exclude_external_links=True,
@@ -105,7 +106,30 @@ async def main(args):
     from uuid import uuid4
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
-        for result in await crawler.arun(
+        # # NON-STREAMING MODE
+        # # Treats results as batches
+        # # For when time is not a crucial factor
+        # for result in await crawler.arun(
+        #     url=args.base_url,
+        #     config=run_config,
+        #     dispatcher=dispatcher,
+        # ):
+        #    # CrawlResult
+        #    single_result = result._results[0] if len(result._results) == 1 else "None or Multiple Results"
+        #    base_dir = os.path.join(os.path.dirname(__file__), "crawl_results")
+           
+        #    file_name = str()
+        #    if single_result.url:
+        #       file_name = url_to_filename(single_result.url)
+        #    else:
+        #       file_name = str(uuid4())
+
+        #    save_all(single_result, base_dir, file_name)
+
+        # STREAMING MODE
+        # TODO: This is monkey patching. Need to enable stream at config init with constructor
+        run_config.stream = True
+        async for result in await crawler.arun(
             url=args.base_url,
             config=run_config,
             dispatcher=dispatcher,
@@ -121,6 +145,7 @@ async def main(args):
               file_name = str(uuid4())
 
            save_all(single_result, base_dir, file_name)
+
 
 if __name__ == "__main__":
     args = parse_args()
