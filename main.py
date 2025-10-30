@@ -1,6 +1,7 @@
 import asyncio
 import os
 from save_utils import save_all, url_to_filename
+from async_save_utils import async_save_all
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.deep_crawling import BFSDeepCrawlStrategy
 from crawl4ai.content_scraping_strategy import LXMLWebScrapingStrategy
@@ -124,7 +125,7 @@ async def main(args):
            else:
               file_name = str(uuid4())
 
-           save_all(single_result, base_dir, file_name)
+           await async_save_all(single_result, base_dir, file_name)
 
         # # NON-STREAMING MODE
         # Depreccated
