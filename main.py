@@ -8,6 +8,9 @@ from crawl4ai.async_configs import BrowserConfig, CrawlerRunConfig, CacheMode
 from crawl4ai.async_dispatcher import MemoryAdaptiveDispatcher
 from crawl4ai import CrawlerMonitor, DisplayMode
 from crawl4ai import RateLimiter
+from crawl4ai.deep_crawling import BestFirstCrawlingStrategy
+from crawl4ai.deep_crawling.scorers import KeywordRelevanceScorer
+
 
 from argparse import ArgumentParser
 
@@ -17,7 +20,9 @@ def parse_args():
     parser.add_argument('base_url', nargs='?', help='Base URL to crawl (positional)')
     parser.add_argument('--base-url', dest='base_url', help='Base URL to crawl (optional flag)')
     parser.add_argument('--max-depth', type=int, default=2, help='Maximum crawl depth')
+    parser.add_argument('--max-pages', type=int, default=50, help='Maximum number of pages to crawl')
     parser.add_argument('--memory', type=float, default=50.0, help='Memory threshold percent for dispatcher (0-100)')
+    parser.add_argument('--keywords', nargs='+', default=[], help='List of keywords to score pages during crawling')
 
     parser.add_argument('--managed', action='store_true', help='Use managed browser service')
     parser.add_argument('--user-data-dir', type=str, help='Path to user data directory for the browser profile')
@@ -55,13 +60,30 @@ async def main(args):
             # display_mode=DisplayMode.DETAILED
         )
     )
+
+    # Create a scorer
+    scorer = KeywordRelevanceScorer(
+        keywords=["crawl", "example", "async", "configuration"],
+        weight=0.7
+    )
+
+    # deep_crawl_strategy=BFSDeepCrawlStrategy(
+    #     max_depth=args.max_depth,
+    #     include_external=False,
+    # )
+
+    # Recommended
+    deep_crawl_strategy = BestFirstCrawlingStrategy(
+        max_depth=args.max_depth,
+        include_external=False,
+        url_scorer=scorer,
+        max_pages=args.max_pages,
+    )
+
     
     run_config = CrawlerRunConfig(
         # Deep crawling
-        deep_crawl_strategy=BFSDeepCrawlStrategy(
-            max_depth=args.max_depth,
-            include_external=False,
-        ),
+        deep_crawl_strategy=deep_crawl_strategy,
         
         scraping_strategy=LXMLWebScrapingStrategy(),
 
