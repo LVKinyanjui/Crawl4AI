@@ -1,4 +1,9 @@
 # TODO
 
+## Filtering
+Implement Next
+
 ## Streaming
-Figure out why the script does not terminate even when it's done crawling.
+Sometimes the script does not terminate.
+From manual tests it seems to depend from site to site.
+Works fine for now but requires more investigation
