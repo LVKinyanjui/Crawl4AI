@@ -17,6 +17,7 @@ def parse_args():
     parser.add_argument('base_url', nargs='?', help='Base URL to crawl (positional)')
     parser.add_argument('--base-url', dest='base_url', help='Base URL to crawl (optional flag)')
     parser.add_argument('--max-depth', type=int, default=2, help='Maximum crawl depth')
+    parser.add_argument('--memory', type=float, default=50.0, help='Memory threshold percent for dispatcher (0-100)')
 
     parser.add_argument('--managed', action='store_true', help='Use managed browser service')
     parser.add_argument('--user-data-dir', type=str, help='Path to user data directory for the browser profile')
@@ -47,7 +48,7 @@ async def main(args):
             )
     
     dispatcher = MemoryAdaptiveDispatcher(
-        memory_threshold_percent=50.0,
+        memory_threshold_percent=args.memory,
         check_interval=1.0,
         max_session_permit=5,
         monitor=CrawlerMonitor(
