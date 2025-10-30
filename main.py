@@ -84,7 +84,7 @@ async def main(args):
     run_config = CrawlerRunConfig(
         # Deep crawling
         deep_crawl_strategy=deep_crawl_strategy,
-        
+    
         scraping_strategy=LXMLWebScrapingStrategy(),
 
         # Content filtering
@@ -99,36 +99,16 @@ async def main(args):
 
         # Cache control
         cache_mode=CacheMode.ENABLED,  # Use cache if available
-
+        
+        stream=True, #By default, use streaming mode
         screenshot=True,
     )
 
     from uuid import uuid4
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
-        # # NON-STREAMING MODE
-        # # Treats results as batches
-        # # For when time is not a crucial factor
-        # for result in await crawler.arun(
-        #     url=args.base_url,
-        #     config=run_config,
-        #     dispatcher=dispatcher,
-        # ):
-        #    # CrawlResult
-        #    single_result = result._results[0] if len(result._results) == 1 else "None or Multiple Results"
-        #    base_dir = os.path.join(os.path.dirname(__file__), "crawl_results")
-           
-        #    file_name = str()
-        #    if single_result.url:
-        #       file_name = url_to_filename(single_result.url)
-        #    else:
-        #       file_name = str(uuid4())
-
-        #    save_all(single_result, base_dir, file_name)
 
         # STREAMING MODE
-        # TODO: This is monkey patching. Need to enable stream at config init with constructor
-        run_config.stream = True
         async for result in await crawler.arun(
             url=args.base_url,
             config=run_config,
@@ -146,6 +126,27 @@ async def main(args):
 
            save_all(single_result, base_dir, file_name)
 
+        # # NON-STREAMING MODE
+        # Depreccated
+        # # Treats results as batches
+        # # For when time is not a crucial factor
+        # run_config.stream = False
+        # for result in await crawler.arun(
+        #     url=args.base_url,
+        #     config=run_config,
+        #     dispatcher=dispatcher,
+        # ):
+        #    # CrawlResult
+        #    single_result = result._results[0] if len(result._results) == 1 else "None or Multiple Results"
+        #    base_dir = os.path.join(os.path.dirname(__file__), "crawl_results")
+           
+        #    file_name = str()
+        #    if single_result.url:
+        #       file_name = url_to_filename(single_result.url)
+        #    else:
+        #       file_name = str(uuid4())
+
+        #    save_all(single_result, base_dir, file_name)
 
 if __name__ == "__main__":
     args = parse_args()
