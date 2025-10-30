@@ -63,7 +63,7 @@ async def main(args):
 
     # Create a scorer
     scorer = KeywordRelevanceScorer(
-        keywords=["crawl", "example", "async", "configuration"],
+        keywords=args.keywords,
         weight=0.7
     )
 
