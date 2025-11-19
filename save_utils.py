@@ -14,34 +14,47 @@ def ensure_dir_exists(directory: str):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def save_markdown(result, base_dir, url_id):
-    """Save markdown fields from CrawlResult."""
+def save_markdown(result, base_dir, url_id, types_to_save=None):
+    """Save markdown fields from CrawlResult.
+
+    Args:
+        result: The CrawlResult object containing markdown data.
+        base_dir: The base directory to save markdown files.
+        url_id: The unique identifier for the URL.
+        types_to_save: A list of markdown types to save (e.g., ["raw", "citations"]).
+                       If None, all markdown types will be saved.
+    """
     md_dir = os.path.join(base_dir, "markdown")
     ensure_dir_exists(md_dir)
     if result.markdown:
         debug_print("markdown", result.markdown)
         if hasattr(result.markdown, "raw_markdown"):
-            if isinstance(result.markdown.raw_markdown, str):
-                with open(os.path.join(md_dir, f"{url_id}_raw.md"), "w", encoding="utf-8") as f:
-                    f.write(result.markdown.raw_markdown)
-            debug_print("raw_markdown", result.markdown.raw_markdown)
-            if isinstance(result.markdown.markdown_with_citations, str):
-                with open(os.path.join(md_dir, f"{url_id}_citations.md"), "w", encoding="utf-8") as f:
-                    f.write(result.markdown.markdown_with_citations)
-            debug_print("markdown_with_citations", result.markdown.markdown_with_citations)
-            if isinstance(result.markdown.references_markdown, str):
-                with open(os.path.join(md_dir, f"{url_id}_references.md"), "w", encoding="utf-8") as f:
-                    f.write(result.markdown.references_markdown)
-            debug_print("references_markdown", result.markdown.references_markdown)
-            if isinstance(getattr(result.markdown, "fit_markdown", None), str):
-                with open(os.path.join(md_dir, f"{url_id}_fit.md"), "w", encoding="utf-8") as f:
-                    f.write(result.markdown.fit_markdown)
-            debug_print("fit_markdown", getattr(result.markdown, "fit_markdown", None))
+            if types_to_save is None or "raw" in types_to_save:
+                if isinstance(result.markdown.raw_markdown, str):
+                    with open(os.path.join(md_dir, f"{url_id}_raw.md"), "w", encoding="utf-8") as f:
+                        f.write(result.markdown.raw_markdown)
+                debug_print("raw_markdown", result.markdown.raw_markdown)
+            if types_to_save is None or "citations" in types_to_save:
+                if isinstance(result.markdown.markdown_with_citations, str):
+                    with open(os.path.join(md_dir, f"{url_id}_citations.md"), "w", encoding="utf-8") as f:
+                        f.write(result.markdown.markdown_with_citations)
+                debug_print("markdown_with_citations", result.markdown.markdown_with_citations)
+            if types_to_save is None or "references" in types_to_save:
+                if isinstance(result.markdown.references_markdown, str):
+                    with open(os.path.join(md_dir, f"{url_id}_references.md"), "w", encoding="utf-8") as f:
+                        f.write(result.markdown.references_markdown)
+                debug_print("references_markdown", result.markdown.references_markdown)
+            if types_to_save is None or "fit" in types_to_save:
+                if isinstance(getattr(result.markdown, "fit_markdown", None), str):
+                    with open(os.path.join(md_dir, f"{url_id}_fit.md"), "w", encoding="utf-8") as f:
+                        f.write(result.markdown.fit_markdown)
+                debug_print("fit_markdown", getattr(result.markdown, "fit_markdown", None))
         else:
-            if isinstance(result.markdown, str):
-                with open(os.path.join(md_dir, f"{url_id}.md"), "w", encoding="utf-8") as f:
-                    f.write(result.markdown)
-            debug_print("markdown (str)", result.markdown)
+            if types_to_save is None or "default" in types_to_save:
+                if isinstance(result.markdown, str):
+                    with open(os.path.join(md_dir, f"{url_id}.md"), "w", encoding="utf-8") as f:
+                        f.write(result.markdown)
+                debug_print("markdown (str)", result.markdown)
 
 def save_html(result, base_dir, url_id):
     """Save HTML variants."""

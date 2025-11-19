@@ -1,6 +1,6 @@
 import asyncio
 import os
-from save_utils import save_all, url_to_filename
+from save_utils import save_all, save_markdown, save_screenshot, url_to_filename
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.deep_crawling import BFSDeepCrawlStrategy
 from crawl4ai.content_scraping_strategy import LXMLWebScrapingStrategy
@@ -120,7 +120,10 @@ async def main(args):
            else:
               file_name = str(uuid4())
 
-           save_all(single_result, base_dir, file_name)
+        
+        #    save_all(single_result, base_dir, file_name)
+           save_markdown(single_result, base_dir, file_name, "raw")
+           save_screenshot(single_result, base_dir, file_name)
 
 if __name__ == "__main__":
     args = parse_args()
