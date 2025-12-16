@@ -1,4 +1,5 @@
 """
+TODO : Deprecated. Use async_save_utils.py instead.
 Utility functions to save CrawlResult fields to the organized directory structure.
 """
 import os
@@ -181,6 +182,38 @@ def save_all(result, base_dir, url_id):
     save_mhtml(result, base_dir, url_id)
     save_screenshot(result, base_dir, url_id)
     save_metadata(result, base_dir, url_id)
+
+
+def save_filtered(result, base_dir, url_id, selected: set | None):
+    """Save only selected sections. If `selected` is falsy, save everything.
+
+    `selected` is a set of strings matching the short names: 'markdown', 'html',
+    'links', 'media', 'tables', 'extracted', 'pdf', 'mhtml', 'screenshots', 'metadata'
+    """
+    if not selected:
+        save_all(result, base_dir, url_id)
+        return
+
+    if "markdown" in selected:
+        save_markdown(result, base_dir, url_id)
+    if "html" in selected:
+        save_html(result, base_dir, url_id)
+    if "links" in selected:
+        save_links(result, base_dir, url_id)
+    if "media" in selected:
+        save_media(result, base_dir, url_id)
+    if "tables" in selected:
+        save_tables(result, base_dir, url_id)
+    if "extracted" in selected:
+        save_extracted_content(result, base_dir, url_id)
+    if "pdf" in selected:
+        save_pdf(result, base_dir, url_id)
+    if "mhtml" in selected:
+        save_mhtml(result, base_dir, url_id)
+    if "screenshots" in selected:
+        save_screenshot(result, base_dir, url_id)
+    if "metadata" in selected:
+        save_metadata(result, base_dir, url_id)
 
 def url_to_filename(url: str) -> str:
     """Convert a URL to a safe filename: example_com_login"""

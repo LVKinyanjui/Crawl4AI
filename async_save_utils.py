@@ -135,3 +135,35 @@ async def async_save_all(result, base_dir, url_id):
     await async_save_screenshot(result, base_dir, url_id)
     await async_save_metadata(result, base_dir, url_id)
 
+
+async def async_save_filtered(result, base_dir, url_id, selected: set | None):
+    """Save only selected sections. If `selected` is falsy, save everything.
+
+    `selected` is a set of strings matching the short names: 'markdown', 'html',
+    'links', 'media', 'tables', 'extracted', 'pdf', 'mhtml', 'screenshots', 'metadata'
+    """
+    if not selected:
+        await async_save_all(result, base_dir, url_id)
+        return
+
+    if "markdown" in selected:
+        await async_save_markdown(result, base_dir, url_id)
+    if "html" in selected:
+        await async_save_html(result, base_dir, url_id)
+    if "links" in selected:
+        await async_save_links(result, base_dir, url_id)
+    if "media" in selected:
+        await async_save_media(result, base_dir, url_id)
+    if "tables" in selected:
+        await async_save_tables(result, base_dir, url_id)
+    if "extracted" in selected:
+        await async_save_extracted_content(result, base_dir, url_id)
+    if "pdf" in selected:
+        await async_save_pdf(result, base_dir, url_id)
+    if "mhtml" in selected:
+        await async_save_mhtml(result, base_dir, url_id)
+    if "screenshots" in selected:
+        await async_save_screenshot(result, base_dir, url_id)
+    if "metadata" in selected:
+        await async_save_metadata(result, base_dir, url_id)
+
