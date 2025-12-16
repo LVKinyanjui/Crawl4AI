@@ -1,6 +1,7 @@
 import asyncio
 import os
-from save_utils import save_all, save_markdown, save_screenshot, url_to_filename
+from save_utils import save_all, url_to_filename
+from async_save_utils import async_save_all
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.deep_crawling import BFSDeepCrawlStrategy
 from crawl4ai.content_scraping_strategy import LXMLWebScrapingStrategy
@@ -84,10 +85,11 @@ async def main(args):
     run_config = CrawlerRunConfig(
         # Deep crawling
         deep_crawl_strategy=deep_crawl_strategy,
-        
+    
         scraping_strategy=LXMLWebScrapingStrategy(),
 
         # Content filtering
+        # TODO: Investigatte what this is
         word_count_threshold=10,
         excluded_tags=['form', 'header'],
         exclude_external_links=True,
@@ -98,14 +100,17 @@ async def main(args):
 
         # Cache control
         cache_mode=CacheMode.ENABLED,  # Use cache if available
-
+        
+        stream=True, #By default, use streaming mode
         screenshot=True,
     )
 
     from uuid import uuid4
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
-        for result in await crawler.arun(
+
+        # STREAMING MODE
+        async for result in await crawler.arun(
             url=args.base_url,
             config=run_config,
             dispatcher=dispatcher,
@@ -120,10 +125,29 @@ async def main(args):
            else:
               file_name = str(uuid4())
 
-        
+           await async_save_all(single_result, base_dir, file_name)
+
+        # # NON-STREAMING MODE
+        # Depreccated
+        # # Treats results as batches
+        # # For when time is not a crucial factor
+        # run_config.stream = False
+        # for result in await crawler.arun(
+        #     url=args.base_url,
+        #     config=run_config,
+        #     dispatcher=dispatcher,
+        # ):
+        #    # CrawlResult
+        #    single_result = result._results[0] if len(result._results) == 1 else "None or Multiple Results"
+        #    base_dir = os.path.join(os.path.dirname(__file__), "crawl_results")
+           
+        #    file_name = str()
+        #    if single_result.url:
+        #       file_name = url_to_filename(single_result.url)
+        #    else:
+        #       file_name = str(uuid4())
+
         #    save_all(single_result, base_dir, file_name)
-           save_markdown(single_result, base_dir, file_name, "raw")
-           save_screenshot(single_result, base_dir, file_name)
 
 if __name__ == "__main__":
     args = parse_args()
