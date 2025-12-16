@@ -14,27 +14,37 @@ def _ensure_dir(path: str) -> None:
     """
     os.makedirs(path, exist_ok=True)
 
-async def async_save_markdown(result, base_dir, url_id):
+async def async_save_markdown(result, base_dir, url_id, types_to_save: set | None = None):
     md_dir = os.path.join(base_dir, "markdown")
     _ensure_dir(md_dir)
     if result.markdown:
-        if hasattr(result.markdown, "raw_markdown"): 
-            if isinstance(result.markdown.raw_markdown, str):
-                async with aiofiles.open(os.path.join(md_dir, f"{url_id}_raw.md"), "w", encoding="utf-8") as f:
-                    await f.write(result.markdown.raw_markdown)
-            if isinstance(result.markdown.markdown_with_citations, str):
-                async with aiofiles.open(os.path.join(md_dir, f"{url_id}_citations.md"), "w", encoding="utf-8") as f:
-                    await f.write(result.markdown.markdown_with_citations)
-            if isinstance(result.markdown.references_markdown, str):
-                async with aiofiles.open(os.path.join(md_dir, f"{url_id}_references.md"), "w", encoding="utf-8") as f:
-                    await f.write(result.markdown.references_markdown)
-            if isinstance(getattr(result.markdown, "fit_markdown", None), str):
-                async with aiofiles.open(os.path.join(md_dir, f"{url_id}_fit.md"), "w", encoding="utf-8") as f:
-                    await f.write(result.markdown.fit_markdown)
+        if hasattr(result.markdown, "raw_markdown"):
+            # raw
+            if (types_to_save is None) or ("raw" in types_to_save):
+                if isinstance(result.markdown.raw_markdown, str):
+                    async with aiofiles.open(os.path.join(md_dir, f"{url_id}_raw.md"), "w", encoding="utf-8") as f:
+                        await f.write(result.markdown.raw_markdown)
+            # citations
+            if (types_to_save is None) or ("citations" in types_to_save):
+                if isinstance(result.markdown.markdown_with_citations, str):
+                    async with aiofiles.open(os.path.join(md_dir, f"{url_id}_citations.md"), "w", encoding="utf-8") as f:
+                        await f.write(result.markdown.markdown_with_citations)
+            # references
+            if (types_to_save is None) or ("references" in types_to_save):
+                if isinstance(result.markdown.references_markdown, str):
+                    async with aiofiles.open(os.path.join(md_dir, f"{url_id}_references.md"), "w", encoding="utf-8") as f:
+                        await f.write(result.markdown.references_markdown)
+            # fit
+            if (types_to_save is None) or ("fit" in types_to_save):
+                if isinstance(getattr(result.markdown, "fit_markdown", None), str):
+                    async with aiofiles.open(os.path.join(md_dir, f"{url_id}_fit.md"), "w", encoding="utf-8") as f:
+                        await f.write(result.markdown.fit_markdown)
         else:
-            if isinstance(result.markdown, str):
-                async with aiofiles.open(os.path.join(md_dir, f"{url_id}.md"), "w", encoding="utf-8") as f:
-                    await f.write(result.markdown)
+            # default single string markdown
+            if (types_to_save is None) or ("default" in types_to_save):
+                if isinstance(result.markdown, str):
+                    async with aiofiles.open(os.path.join(md_dir, f"{url_id}.md"), "w", encoding="utf-8") as f:
+                        await f.write(result.markdown)
 
 async def async_save_html(result, base_dir, url_id):
     raw_dir = os.path.join(base_dir, "html", "raw")

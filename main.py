@@ -1,7 +1,7 @@
 import asyncio
 import os
 from save_utils import save_all, url_to_filename
-from async_save_utils import async_save_all, async_save_filtered
+from async_save_utils import async_save_all, async_save_filtered, async_save_markdown
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.deep_crawling import BFSDeepCrawlStrategy
 from crawl4ai.content_scraping_strategy import LXMLWebScrapingStrategy
@@ -29,6 +29,8 @@ def parse_args():
     parser.add_argument('--user-data-dir', type=str, help='Path to user data directory for the browser profile')
     # Selective save options: when any of these are provided, only those will be saved.
     parser.add_argument('--markdown', action='store_true', help='Save markdown')
+    parser.add_argument('--markdown-types', nargs='+', choices=['raw','citations','references','fit','default'],
+                        help='Markdown subtypes to save (only used when --markdown is provided)')
     parser.add_argument('--html', action='store_true', help='Save html')
     parser.add_argument('--links', action='store_true', help='Save links')
     parser.add_argument('--media', action='store_true', help='Save media')
@@ -139,8 +141,21 @@ async def main(args):
            save_opts = {"markdown","html","links","media","tables","extracted","pdf","mhtml","screenshots","metadata"}
            selected = {opt for opt in save_opts if getattr(args, opt)}
 
+           # Handle markdown subtype flags
+           markdown_types = set(args.markdown_types) if getattr(args, 'markdown_types', None) else None
+
            if selected:
-               await async_save_filtered(single_result, base_dir, file_name, selected)
+               # If markdown is requested and there are subtype flags, call async_save_markdown with types
+               if "markdown" in selected:
+                   if markdown_types:
+                       await async_save_markdown(single_result, base_dir, file_name, types_to_save=markdown_types)
+                   else:
+                       await async_save_markdown(single_result, base_dir, file_name)
+                   # Remove markdown from the set so async_save_filtered doesn't save it again
+                   selected = selected - {"markdown"}
+
+               if selected:
+                   await async_save_filtered(single_result, base_dir, file_name, selected)
            else:
                await async_save_all(single_result, base_dir, file_name)
 

@@ -1,13 +1,52 @@
-import os
-import base64
+import sys
 import asyncio
 from types import SimpleNamespace
+from pathlib import Path
 
 import pytest
+
+from main import parse_args
+from async_save_utils import async_save_markdown
+
+import os
+import base64
 
 from save_utils import save_filtered
 from async_save_utils import async_save_filtered
 
+
+
+def test_parse_args_markdown_subtypes(monkeypatch):
+    monkeypatch.setattr(sys, 'argv', [
+        'main.py', 'https://example.com', '--markdown', '--markdown-types', 'raw', 'fit'
+    ])
+    args = parse_args()
+    assert args.base_url == 'https://example.com'
+    assert args.markdown is True
+    assert args.markdown_types == ['raw', 'fit']
+
+
+@pytest.mark.asyncio
+async def test_async_save_markdown_subtypes(tmp_path):
+    base_dir = tmp_path
+    url_id = 'example_com'
+
+    md = SimpleNamespace(
+        raw_markdown="# Raw",
+        markdown_with_citations="# Citations",
+        references_markdown="# Refs",
+        fit_markdown="# Fit",
+    )
+    result = SimpleNamespace(markdown=md)
+
+    # Save only raw and fit
+    await async_save_markdown(result, str(base_dir), url_id, types_to_save={"raw", "fit"})
+
+    md_dir = Path(base_dir) / "markdown"
+    assert (md_dir / f"{url_id}_raw.md").exists()
+    assert (md_dir / f"{url_id}_fit.md").exists()
+    assert not (md_dir / f"{url_id}_citations.md").exists()
+    assert not (md_dir / f"{url_id}_references.md").exists()
 
 def make_dummy_result():
     # Build a simple object that mimics the CrawlResult attributes used by save utilities
